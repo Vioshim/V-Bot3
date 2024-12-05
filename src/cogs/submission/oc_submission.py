@@ -223,6 +223,162 @@ class Template(TemplateItem, Enum):
             "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     }
+    Furry = {
+        "description": "Anthropomorphic characters that are not Pokemon.",
+        "modifier": {"Species": ("Furry", "Furry Species")},
+        "exclude": ["Types"],
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Human = {
+        "description": "Human characters that are not Pokemon.",
+        "modifier": {"Species": ("Human", "Human Species")},
+        "exclude": ["Types"],
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Elementals = {
+        "description": "Characters that are made of elements.",
+        "modifier": {"Species": ("Elemental", "Elemental Species")},
+        "exclude": ["Types"],
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Shapeshifter = {
+        "description": "Characters that can change their form.",
+        "modifier": {"Species": ("Shapeshifter", "Shapeshifter Species")},
+        "exclude": ["Types"],
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Mystics = {
+        "description": "Characters that have mystical powers.",
+        "modifier": {"Species": ("Mystic", "Mystic Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Avians = {
+        "description": "Characters that are birds.",
+        "modifier": {"Species": ("Avian", "Avian Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    DeepSea = {
+        "description": "Characters that are sea creatures.",
+        "modifier": {"Species": ("Deep Sea", "Deep Sea Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Constructs = {
+        "description": "Characters that are machines.",
+        "modifier": {"Species": ("Construct", "Construct Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Insectoids = {
+        "description": "Characters that are insects.",
+        "modifier": {"Species": ("Insectoid", "Insectoid Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Draconic = {
+        "description": "Characters that are dragons.",
+        "modifier": {"Species": ("Draconic", "Draconic Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Ghostkind = {
+        "description": "Characters that are spirits.",
+        "modifier": {"Species": ("Ghostkind", "Ghostkind Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    RuneBeings = {
+        "description": "Characters that have runes.",
+        "modifier": {"Species": ("Rune Being", "Rune Being Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Feykin = {
+        "description": "Characters that are fey.",
+        "modifier": {"Species": ("Feykin", "Feykin Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Titan = {
+        "description": "Characters that are giants.",
+        "modifier": {"Species": ("Titan", "Titan Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Chimera = {
+        "description": "Characters that are hybrids.",
+        "modifier": {"Species": ("Chimera", "Chimera Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Plasmoid = {
+        "description": "Characters that are plasma.",
+        "modifier": {"Species": ("Plasmoid", "Plasmoid Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Celestial = {
+        "description": "Characters that are stars.",
+        "modifier": {"Species": ("Celestial", "Celestial Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Wildkin = {
+        "description": "Characters that are ferals.",
+        "modifier": {"Species": ("Wildkin", "Wildkin Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
+    Voidborn = {
+        "description": "Characters that are void.",
+        "modifier": {"Species": ("Voidborn", "Voidborn Species")},
+        "docs": {
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    }
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
@@ -275,15 +431,11 @@ class Template(TemplateItem, Enum):
 
     @property
     def max_values(self):
-        return 3 if self == self.Pokemon else 1
+        return 3 if self == self.Pokemon else 0
 
     @property
     def total_species(self) -> frozenset[Species]:
-        match self.name:
-            case "Pokemon":
-                mon_total = Species.all()
-            case _:
-                mon_total = []
+        mon_total = Species.all()
         return frozenset({x for x in mon_total if not x.banned})
 
     @property
@@ -1075,6 +1227,13 @@ class CreationOCView(Basic):
         self.embed.title = "Character Creation"
         self.bot = bot
         oc = oc.copy() if oc else Character()
+
+        if template is None and oc.template:
+            try:
+                template = Template[oc.template]
+            except KeyError:
+                pass
+
         oc.author = oc.author or user.id
         oc.server = itx.guild.id
         self.oc = oc
@@ -1159,6 +1318,7 @@ class CreationOCView(Basic):
             items = [SpeciesField, TypesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
+            self.oc.template = self.ref_template.name
             self.oc.size = self.oc.weight = Size.Average
             await self.update(itx)
         except Exception as e:
