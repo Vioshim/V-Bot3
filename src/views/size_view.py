@@ -129,7 +129,7 @@ class HeightView(Basic):
 
             label = Size.Average.height_info(size.value)
             self.choice.add_option(
-                label=size.name,
+                label=size.reference_name,
                 value=str(size.value),
                 emoji=emoji,
                 description=label,
