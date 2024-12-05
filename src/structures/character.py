@@ -206,7 +206,7 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Titan = 2.1
+    Titan = 3
     Maximum = 1.5
     Very_Large = 1.375
     Large = 1.25
@@ -216,7 +216,7 @@ class Size(float, Enum):
     Small = 0.75
     Very_Small = 0.625
     Minimum = 0.5
-    Minuscule = 0.25
+    Minuscule = 0.1
 
     @property
     def emoji(self):
