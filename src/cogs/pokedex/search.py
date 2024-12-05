@@ -727,7 +727,7 @@ class OCGroupByHeight(OCGroupBy[float]):
 class OCGroupByWeight(OCGroupBy[Weight]):
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        ocs = sorted(ocs, key=lambda x: x.weight_value, reverse=True)
+        ocs = sorted(ocs, key=lambda x: x.weight.value, reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight)}
 
     @staticmethod

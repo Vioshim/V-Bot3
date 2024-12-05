@@ -710,7 +710,7 @@ class SizeField(TemplateField):
         )
         await view.send(
             title=f"{template.title} Character's Size.",
-            description=f"> {oc.size_kind.name}: {oc.height_text}",
+            description=f"> {template.name}: {oc.height_text}",
             ephemeral=ephemeral,
             image="https://cdn.discordapp.com/attachments/1244123820004999270/1270002674863046748/image.png",
         )

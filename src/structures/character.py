@@ -237,7 +237,7 @@ class Size(float, Enum):
     def weight_value(self, value: float = 0):
         if value:
             return round(value, 4)
-    
+
         return round(10 * ((self.value - 0.25) / 0.6) ** 3, 4)
 
     @staticmethod
@@ -439,8 +439,7 @@ class Character:
     image: Optional[int | str | File] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
-    size: float = 1.65
-    size_kind: SizeKind = SizeKind.Regular
+    size: Size | float = Size.Average
     weight: Weight = Weight.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
@@ -538,14 +537,6 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-
-        if isinstance(self.size_kind, float):
-            try:
-                self.size_kind = SizeKind(self.size_kind)
-            except ValueError:
-                self.size_kind = SizeKind.Regular
-
-        self.size = min(2.1 * self.age.scale, max(1.2 * self.age.scale, self.size))
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -687,10 +678,6 @@ class Character:
         return Size.Average.height_info(self.height_value)
 
     @property
-    def real_height_text(self):
-        return Size.Average.height_info(self.real_height_value)
-
-    @property
     def height_value(self):
         if isinstance(self.size, Size):
             value = self.size.value
@@ -699,20 +686,8 @@ class Character:
         return round(value, 4)
 
     @property
-    def real_height_value(self):
-        return round(self.height_value * self.size_kind.value, 4)
-
-    @property
     def weight_text(self):
         return self.weight.name.replace("_", " ")
-
-    @property
-    def weight_value(self):
-        if isinstance(self.weight, Size):
-            value = self.weight.weight_value(60)
-        else:
-            value = self.weight
-        return round(value, 4)
 
     @property
     def default_image(self):
