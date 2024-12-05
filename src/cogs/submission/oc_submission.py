@@ -384,7 +384,7 @@ class Template(TemplateItem, Enum):
         choices: list[Species] = []
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         mons = self.total_species
-        
+
         key = {"server": itx.guild_id}
         if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
@@ -682,8 +682,16 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if not oc.size_kind.is_valid():
-            return "Invalid Size Kind"
+        if isinstance(oc.size, Size):
+            return
+
+        if oc.size < 0.1:
+            size = Size.Average.height_info(0.1)
+            return f"Size too small, must be at least {size}."
+
+        if oc.size > 3:
+            size = Size.Average.height_info(3)
+            return f"Size too large, must be at most {size}."
 
     @classmethod
     async def on_submit(
@@ -694,7 +702,12 @@ class SizeField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = HeightView(target=itx, member=itx.user, oc=oc, unlock=itx.permissions.administrator)
+        view = HeightView(
+            target=itx,
+            member=itx.user,
+            oc=oc,
+            unlock=itx.permissions.administrator,
+        )
         await view.send(
             title=f"{template.title} Character's Size.",
             description=f"> {oc.size_kind.name}: {oc.height_text}",

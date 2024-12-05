@@ -206,7 +206,7 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Titan = 3
+    Titan = 3.3
     Maximum = 1.5
     Very_Large = 1.375
     Large = 1.25
@@ -813,7 +813,7 @@ class Character:
         if self.nature:
             footer_elements.append(f"Nature: {self.nature.name}")
         footer_elements.append(f"Types: {', '.join(x.name for x in self.types)}")
-        ref = self.template or self.size_kind.name
+        ref = self.template or "Pokemon"
         footer_elements.append(f"{ref}: {self.height_text}")
         footer_elements.append(f"Shape: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
