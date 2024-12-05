@@ -206,17 +206,15 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Titan = 3.3
-    Maximum = 1.5
-    Very_Large = 1.375
-    Large = 1.25
-    Above_Average = 1.125
-    Average = 1.0
-    Below_Average = 0.875
-    Small = 0.75
-    Very_Small = 0.625
-    Minimum = 0.5
-    Minuscule = 0.1
+    Maximum = 3
+    Very_Large = 2.6625
+    Large = 2.325
+    Above_Average = 1.9875
+    Average = 1.65
+    Below_Average = 1.2625
+    Small = 0.875
+    Very_Small = 0.4875
+    Minimum = 0.1
 
     @property
     def emoji(self):

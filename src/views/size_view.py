@@ -101,11 +101,6 @@ class HeightModal2(HeightModal):
             return 0
 
 
-AMOUNT = 15
-MIN_VALUE = Size.Minuscule.value
-MAX_VALUE = Size.Titan.value
-
-
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character, unlock: bool = False):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
@@ -123,14 +118,8 @@ class HeightView(Basic):
             self.manual_1.label, self.manual_2.label = info, "Feet & Inches"
 
         self.choice.options.clear()
-        middle = AMOUNT // 2
-        for index, value in enumerate(
-            np.linspace(
-                MAX_VALUE * self.oc.age.scale,
-                MIN_VALUE * self.oc.age.scale,
-                AMOUNT,
-            )
-        ):
+        middle = len(Size) // 2
+        for index, size in enumerate(Size):
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
@@ -138,8 +127,13 @@ class HeightView(Basic):
             else:
                 emoji = "🟦"
 
-            label = Size.Average.height_info(value)
-            self.choice.add_option(label=label, value=str(value), emoji=emoji)
+            label = Size.Average.height_info(size.value)
+            self.choice.add_option(
+                label=size.name,
+                value=str(size.value),
+                emoji=emoji,
+                description=label,
+            )
 
         return self
 
