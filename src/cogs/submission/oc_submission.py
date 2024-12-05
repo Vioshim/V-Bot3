@@ -1315,9 +1315,12 @@ class CreationOCView(Basic):
     @select(placeholder="Select Kind", row=0)
     async def kind(self, itx: Interaction[CustomBot], sct: Select):
         try:
-            items = [SpeciesField, TypesField, MovepoolField]
+            items = [TypesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
+            if self.ref_template == Template.Fakemon:
+                self.oc.species = None
+                self.progress -= {SpeciesField.name}
             self.oc.template = self.ref_template.name
             await self.update(itx)
         except Exception as e:
