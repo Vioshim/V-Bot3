@@ -1315,12 +1315,10 @@ class CreationOCView(Basic):
     @select(placeholder="Select Kind", row=0)
     async def kind(self, itx: Interaction[CustomBot], sct: Select):
         try:
-            self.oc.species = None
             items = [SpeciesField, TypesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
             self.oc.template = self.ref_template.name
-            self.oc.size = self.oc.weight = Size.Average
             await self.update(itx)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
