@@ -230,12 +230,14 @@ class Size(float, Enum):
 
     def height_value(self, value: float = 0):
         if value:
-            return round(value * self, 4)
+            return round(value, 4)
+
         return round(0.825 * self.value**2, 4)
 
     def weight_value(self, value: float = 0):
         if value:
-            return round(value * self.value, 4)
+            return round(value, 4)
+    
         return round(10 * ((self.value - 0.25) / 0.6) ** 3, 4)
 
     @staticmethod
@@ -501,7 +503,7 @@ class Character:
         self.moveset = Move.deduce_many(*self.moveset)
 
         try:
-            self.size = Size[self.size].height_value(1) if isinstance(self.size, str) else float(self.size)
+            self.size = Size[self.size].value if isinstance(self.size, str) else float(self.size)
         except (KeyError, ValueError):
             self.size = 1.65
 
@@ -691,7 +693,7 @@ class Character:
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            value = self.size.height_value(1)
+            value = self.size.value
         else:
             value = self.size
         return round(value, 4)

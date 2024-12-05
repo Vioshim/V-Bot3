@@ -15,7 +15,6 @@
 
 from typing import Optional
 
-import numpy as np
 from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
