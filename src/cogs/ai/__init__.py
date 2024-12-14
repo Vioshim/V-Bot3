@@ -109,6 +109,7 @@ class AiCog(commands.Cog):
             os.environ["NOVELAI_USERNAME"],
             os.environ["NOVELAI_PASSWORD"],
             proxy=None,
+            access_token=os.getenv("NOVELAI_ACCESS_TOKEN"),
         )
 
     async def cog_load(self) -> None:
