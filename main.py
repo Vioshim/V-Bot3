@@ -56,7 +56,10 @@ async def main() -> None:
                 activity=Streaming(name="Support V-Bot!", url="https://ko-fi.com/Vioshim"),
                 scheduler=scheduler,
                 logger=logger,
-                owner_id=678374009045254198,
+                owner_ids={
+                    678374009045254198,  # Vioshim
+                    406908562023907329,  # CosmicHail
+                },
                 command_prefix=when_mentioned_or("?"),
                 description="This is Vioshim's bot",
                 command_attrs=dict(hidden=True),

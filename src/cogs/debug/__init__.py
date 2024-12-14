@@ -181,6 +181,7 @@ class Debug(Feature):
     async def on_message(self, message: Message):
         if not await self.bot.is_owner(message.author):
             return
+
         if not message.content:
             return
 
