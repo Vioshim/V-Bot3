@@ -34,8 +34,7 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        ref = self.oc.age.scale
-        self.oc.size = round(min(2.1 * ref, max(1.2 * ref, self.value)), 4)
+        self.oc.size = round(self.value, 4)
         info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -91,13 +90,16 @@ class HeightModal2(HeightModal):
     @property
     def value(self) -> float:
         try:
-            result = Size.ft_inches_to_meters(
-                feet=float(self.text1.value or "0"),
-                inches=float(self.text2.value or "0"),
-            )
-            return round(result, 4)
+            feet = float(self.text1.value or "0")
         except ValueError:
-            return 0
+            feet = 0
+
+        try:
+            inches = float(self.text2.value or "0")
+        except ValueError:
+            inches = 0
+
+        return Size.ft_inches_to_meters(feet=feet, inches=inches)
 
 
 class HeightView(Basic):
@@ -118,7 +120,6 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         middle = len(Size) // 2
-        ref = self.oc.age.scale
 
         for index, size in enumerate(Size):
             if index == middle:
@@ -128,11 +129,10 @@ class HeightView(Basic):
             else:
                 emoji = "🟦"
 
-            size_value = size.value * ref
-            label = Size.Average.height_info(size_value)
+            label = Size.Average.height_info(size.value)
             self.choice.add_option(
                 label=size.reference_name,
-                value=str(size_value),
+                value=str(size.value),
                 emoji=emoji,
                 description=label,
             )
@@ -141,8 +141,7 @@ class HeightView(Basic):
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
-        ref = self.oc.age.scale
-        self.oc.size = round(max(0.1 * ref, min(3 * ref, float(sct.values[0]))), 4)
+        self.oc.size = round(float(sct.values[0]), 4)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")

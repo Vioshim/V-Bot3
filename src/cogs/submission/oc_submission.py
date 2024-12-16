@@ -682,16 +682,8 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if isinstance(oc.size, Size):
-            return
-
-        if oc.size < 0.1:
-            size = Size.Average.height_info(0.1)
-            return f"Size too small, must be at least {size}."
-
-        if oc.size > 3:
-            size = Size.Average.height_info(3)
-            return f"Size too large, must be at most {size}."
+        if oc.size == 0:
+            return "Missing Size"
 
     @classmethod
     async def on_submit(
