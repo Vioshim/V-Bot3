@@ -104,12 +104,12 @@ FREE_RES_OPUS = [
 def checker(ctx: commands.Context[CustomBot]):
 
     if guild := get(ctx.author.mutual_guilds, id=1196879060173852702):
-        member = guild.get_member(ctx.author.id)
 
+        member = guild.get_member(ctx.author.id)
         if member and get(member.roles, id=1307054749727850526):
             return True
 
-    raise commands.UserInputError("You must have the RP role to use this command")
+    raise commands.UserInputError("Unauthorized to use this command")
 
 
 class AiCog(commands.Cog):
