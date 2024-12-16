@@ -118,6 +118,8 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         middle = len(Size) // 2
+        ref = self.oc.age.scale
+
         for index, size in enumerate(Size):
             if index == middle:
                 emoji = "🟩"
@@ -126,10 +128,11 @@ class HeightView(Basic):
             else:
                 emoji = "🟦"
 
-            label = Size.Average.height_info(size.value)
+            size_value = size.value * ref
+            label = Size.Average.height_info(size_value)
             self.choice.add_option(
                 label=size.reference_name,
-                value=str(size.value),
+                value=str(size_value),
                 emoji=emoji,
                 description=label,
             )
