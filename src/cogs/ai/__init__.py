@@ -20,7 +20,6 @@ from typing import Optional
 
 from discord import Attachment, Embed, File, Message, app_commands
 from discord.ext import commands
-from discord.utils import get
 from novelai import (
     Action,
     Metadata,
