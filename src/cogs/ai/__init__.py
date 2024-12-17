@@ -101,17 +101,6 @@ FREE_RES_OPUS = [
 ]
 
 
-def checker(ctx: commands.Context[CustomBot]):
-
-    if guild := get(ctx.author.mutual_guilds, id=1196879060173852702):
-
-        member = guild.get_member(ctx.author.id)
-        if member and get(member.roles, id=1307054749727850526):
-            return True
-
-    raise commands.UserInputError("Unauthorized to use this command")
-
-
 class AiCog(commands.Cog):
 
     def __init__(self, bot: CustomBot):
@@ -130,7 +119,7 @@ class AiCog(commands.Cog):
         await self.client.close()
 
     @commands.max_concurrency(1, wait=False)
-    @commands.check(checker)
+    @commands.is_owner()
     @commands.hybrid_command(nsfw=True)
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
