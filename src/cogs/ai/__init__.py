@@ -117,9 +117,11 @@ class AiCog(commands.Cog):
     async def cog_unload(self) -> None:
         await self.client.close()
 
+    @commands.is_nsfw()
+    @commands.guild_only()
     @commands.max_concurrency(1, wait=False)
-    @commands.is_owner()
     @commands.hybrid_command(nsfw=True)
+    @app_commands.guilds(1196879060173852702, 1184338543762473020)
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, ctx: commands.Context[CustomBot], *, flags: GenerateFlags):
@@ -217,6 +219,7 @@ class AiCog(commands.Cog):
                 raise commands.UserInputError(f"Estimated cost: {result} credits")
 
             msg = await ctx.reply(
+                ephemeral=False,
                 files=[
                     File(
                         fp=BytesIO(img.data),
@@ -230,7 +233,7 @@ class AiCog(commands.Cog):
                         )[:1024],
                     )
                     for img in await self.client.generate_image(payload, verbose=True, is_opus=True)
-                ]
+                ],
             )
 
             ctx.bot.logger.info(
