@@ -278,7 +278,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command()
     @app_commands.checks.has_permissions(manage_messages=True)
-    @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def forum(
         self,
         ctx: Interaction[CustomBot],
