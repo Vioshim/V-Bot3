@@ -462,7 +462,7 @@ class Moderation(commands.Cog):
         await self.vote_process(interaction, member)
 
     @app_commands.command(description="Starts a meeting to report a raider")
-    @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def vote(self, interaction: Interaction, member: Member, *, reason: Optional[str] = None):
         """Starts a votation to report a member
 
