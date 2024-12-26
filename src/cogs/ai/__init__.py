@@ -121,7 +121,6 @@ class AiCog(commands.Cog):
     @commands.guild_only()
     @commands.max_concurrency(1, wait=False)
     @commands.hybrid_command(nsfw=True)
-    @app_commands.guilds(1196879060173852702, 1184338543762473020)
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, ctx: commands.Context[CustomBot], *, flags: GenerateFlags):
