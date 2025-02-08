@@ -433,51 +433,35 @@ class Information(commands.Cog):
         embeds: list[discord.Embed] = []
         files: list[discord.File] = []
 
-        if past.premium_since != now.premium_since:
+        if not (info := data.get("member_boost", {})):
+            return
 
-            if not (info := data.get("member_boost", {})):
-                return
+        if past.premium_since == now.premium_since:
+            return
 
-            if past.premium_since and not now.premium_since:
-                embed = discord.Embed(title="Has un-boosted the Server!", colour=discord.Colour.red())
-                db = self.bot.mongo_db("Custom Role")
-                if (data := await db.find_one_and_delete({"author": now.id, "server": now.guild.id})) and (
-                    role := get(now.guild.roles, id=data["id"])
-                ):
-                    if role.icon:
-                        file = await role.icon.to_file()
-                        embed.set_thumbnail(url=f"attachment://{file.filename}")
-                        files.append(file)
-                    embed.add_field(name="Name", value=role.name)
-                    embed.add_field(name="Color", value=role.color)
+        if past.premium_since and not now.premium_since:
+            embed = discord.Embed(title="Has un-boosted the Server!", colour=discord.Colour.red())
+            db = self.bot.mongo_db("Custom Role")
+            if (data := await db.find_one_and_delete({"author": now.id, "server": now.guild.id})) and (
+                role := get(now.guild.roles, id=data["id"])
+            ):
+                if role.icon:
+                    file = await role.icon.to_file()
+                    embed.set_thumbnail(url=f"attachment://{file.filename}")
+                    files.append(file)
+                embed.add_field(name="Name", value=role.name)
+                embed.add_field(name="Color", value=role.color)
 
-                    with suppress(discord.DiscordException):
-                        await role.delete(reason="User unboosted")
-            else:
-                embed = discord.Embed(title="Has boosted the Server!", colour=discord.Colour.brand_green())
-            embeds.append(embed)
+                with suppress(discord.DiscordException):
+                    await role.delete(reason="User unboosted")
+        else:
+            embed = discord.Embed(title="Has boosted the Server!", colour=discord.Colour.brand_green())
 
-        elif (past.display_name, past.display_avatar) != (now.display_name, now.display_avatar):
-
-            if not (info := data.get("member_update", {})):
-                return
-
-            embed1 = discord.Embed(title=past.display_name, colour=discord.Colour.red())
-            embed2 = discord.Embed(title=now.display_name, colour=discord.Colour.brand_green())
-
-            if past.display_avatar != now.display_avatar:
-                file = await now.display_avatar.with_size(4096).to_file()
-                embed1.set_thumbnail(url=past.display_avatar)
-                embed2.set_thumbnail(url=f"attachment://{file.filename}")
-                files.append(file)
-
-            embeds.extend([embed1, embed2])
-
-        if embeds:
-            embeds[0].set_author(name=now.display_name, icon_url=now.display_avatar)
-            embeds[-1].set_footer(text=now.guild.name, icon_url=now.guild.icon)
-            for embed in embeds:
-                embed.set_image(url=WHITE_BAR)
+        embeds.append(embed)
+        embeds[0].set_author(name=now.display_name, icon_url=now.display_avatar)
+        embeds[-1].set_footer(text=now.guild.name, icon_url=now.guild.icon)
+        for embed in embeds:
+            embed.set_image(url=WHITE_BAR)
 
         if info and now.guild.me.guild_permissions.manage_webhooks:
             channel_id = info["id"]
@@ -540,7 +524,6 @@ class Information(commands.Cog):
             avatar_url=user.display_avatar.url,
         )
 
-    @commands.Cog.listener()
     async def on_role_create(self, role: discord.Role):
         """Role Create Event
 
@@ -573,7 +556,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Join Logging")
         await log.send(embed=embed, thread=thread)
 
-    @commands.Cog.listener()
     async def on_role_delete(self, role: discord.Role):
         """Role Delete Event
 
@@ -608,7 +590,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Role delete")
         await log.send(embed=embed, files=files, thread=thread)
 
-    @commands.Cog.listener()
     async def on_role_update(self, before: discord.Role, after: discord.Role):
         """Role Update Event
 
@@ -675,7 +656,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Edit Logging")
         await log.send(embeds=embeds, files=files, thread=thread)
 
-    @commands.Cog.listener()
     async def on_guild_emojis_update(
         self,
         guild: discord.Guild,
@@ -725,7 +705,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Edit Logging")
         await log.send(embeds=embeds, thread=thread)
 
-    @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel):
         """Channel Create Event
 
@@ -777,7 +756,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Edit Logging")
         await log.send(embed=embed, view=view, thread=thread)
 
-    @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: GuildChannel):
         """Channel Update Event
 
@@ -834,7 +812,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(channel_id, reason="Edit Logging")
         await log.send(embed=embed, view=view, thread=thread)
 
-    @commands.Cog.listener()
     async def on_guild_channel_update(
         self,
         before: GuildChannel,
@@ -1079,7 +1056,6 @@ class Information(commands.Cog):
                     self.bot.msg_cache_add(message)
                     break
 
-    @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Bump handler for message editing bots
 
@@ -1157,7 +1133,6 @@ class Information(commands.Cog):
             thread=thread,
         )
 
-    @commands.Cog.listener()
     async def on_message_delete(self, msg: discord.Message):
         """Cached Message deleted detection
 
@@ -1202,7 +1177,6 @@ class Information(commands.Cog):
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
-    @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         """Message deleted detection
 
@@ -1214,7 +1188,6 @@ class Information(commands.Cog):
         with suppress(KeyError):
             self.bot.msg_cache.remove(payload.message_id)
 
-    @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages: list[discord.Message]):
         """This coroutine triggers upon cached bulk message deletions. YAML Format to Myst.bin
 
@@ -1271,7 +1244,6 @@ class Information(commands.Cog):
 
             await w.send(embed=embed, view=view, thread=thread)
 
-    @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: discord.RawBulkMessageDeleteEvent):
         """This coroutine triggers upon raw bulk message deletions.
 
@@ -1282,7 +1254,6 @@ class Information(commands.Cog):
         """
         self.bot.msg_cache -= payload.message_ids
 
-    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
             return
@@ -1318,7 +1289,6 @@ class Information(commands.Cog):
         except discord.DiscordException as e:
             self.bot.logger.exception("Error on Star System", exc_info=e)
 
-    @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
         if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
             return
