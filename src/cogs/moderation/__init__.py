@@ -226,7 +226,7 @@ class Moderation(commands.Cog):
 
     async def cog_load(self) -> None:
         self.check_applications.start()
-        self.bot.tree.add_command(self.itx_menu)
+        # self.bot.tree.add_command(self.itx_menu)
 
     async def cog_unload(self) -> None:
         self.check_applications.stop()

@@ -148,12 +148,14 @@ class Submission(commands.Cog):
         )
 
     async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.itx_menu1)
-        self.bot.tree.add_command(self.itx_menu2)
+        # self.bot.tree.add_command(self.itx_menu1)
+        # self.bot.tree.add_command(self.itx_menu2)
+        pass
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
-        self.bot.tree.remove_command(self.itx_menu2.name, type=self.itx_menu2.type)
+        # self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
+        # self.bot.tree.remove_command(self.itx_menu2.name, type=self.itx_menu2.type)
+        pass
 
     async def info_checker(self, itx: Interaction[CustomBot], message: Message):
         resp: InteractionResponse = itx.response
@@ -728,7 +730,7 @@ class Submission(commands.Cog):
 
         self.bot.logger.info("Finished loading Submission menu")
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_ready(self):
         if self.ready:
             return
@@ -736,7 +738,7 @@ class Submission(commands.Cog):
         await self.load_submssions()
         self.ready = True
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):
         if not isinstance(parent := thread.parent, ForumChannel) or self.bot.user == thread.owner:
             return
@@ -810,7 +812,7 @@ class Submission(commands.Cog):
                 await data.thread.add_user(thread.owner)
             await thread.delete()
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         db = self.bot.mongo_db("Roleplayers")
 
@@ -1001,8 +1003,8 @@ class Submission(commands.Cog):
             with suppress(DiscordException):
                 await w.delete_message(item["log"], thread=log_channel)
 
-    @app_commands.command(name="ocs")
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    # @app_commands.command(name="ocs")
+    # @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def get_ocs(
         self,
         itx: Interaction[CustomBot],
@@ -1045,8 +1047,8 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
-    @app_commands.command()
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    # @app_commands.command()
+    # @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def hidden(self, itx: Interaction[CustomBot], *, oc: CharacterArg):
         """Allows to show hidden info
 
@@ -1067,7 +1069,7 @@ class Submission(commands.Cog):
         embed.set_image(url=oc.image_url)
         await itx.followup.send(embed=embed, view=view, ephemeral=True)
 
-    @commands.command()
+    # @commands.command()
     async def addchar(self, ctx: commands.Context[CustomBot], *, text: str = ""):
         """Allows to create OCs from text
 
@@ -1097,9 +1099,9 @@ class Submission(commands.Cog):
         finally:
             self.ignore -= {ctx.author.id}
 
-    @app_commands.command()
-    @app_commands.checks.has_role("Moderation")
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    # @app_commands.command()
+    # @app_commands.checks.has_role("Moderation")
+    # @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def submit_as(self, itx: Interaction[CustomBot], member: User):
         """Allows to create OCs as an user
 
@@ -1121,8 +1123,8 @@ class Submission(commands.Cog):
             delete_after=3,
         )
 
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
-    @commands.hybrid_command()
+    # @app_commands.guilds(952518750748438549, 1196879060173852702)
+    # @commands.hybrid_command()
     async def weather(
         self,
         ctx: commands.Context[CustomBot],

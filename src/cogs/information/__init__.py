@@ -248,7 +248,7 @@ class Information(commands.Cog):
 
     @commands.hybrid_command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    @app_commands.checks.has_any_role("Booster", "Supporter")
+    @app_commands.checks.has_any_role("Booster", "Supporter", "Premium Members")
     async def custom_role(
         self,
         ctx: commands.Context[CustomBot],
