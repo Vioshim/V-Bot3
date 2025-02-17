@@ -732,7 +732,7 @@ class Moderation(commands.Cog):
     @commands.command(name="unban")
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.has_guild_permissions(ban_members=True)
-    async def unban(self, ctx: Context, user: User, *, reason: str = None):
+    async def unban(self, ctx: Context, user: User, *, reason: Optional[str] = None):
         """Removes a ban to an a user from the server.
 
         Parameters
@@ -744,14 +744,10 @@ class Moderation(commands.Cog):
         reason : str, optional
             Reason, by default None
         """
-        if isinstance(user, User):
-            await ctx.guild.unban(
-                user=user,
-                reason=f"{user.display_name} was unbanned by {ctx.author} ({ctx.author.id}). Reason: {reason}",
-            )
-            await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
-        else:
-            await ctx.reply("Unable to retrieve the user.")
+        await ctx.guild.unban(
+            user=user,
+            reason=f"{user} was unbanned by {ctx.author}. Reason: {reason}",
+        )
         await ctx.message.delete(delay=0)
 
 
